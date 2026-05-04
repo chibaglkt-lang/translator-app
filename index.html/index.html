@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプル翻訳アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .haikei {
+            position: relative;
+            background: #0B254E;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 120px;
+        }
+
+        .haikei::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 150%;
+            height: 150%;
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 2px 2px, 3px 3px, 4px 4px;
+            background-position: 0 0, 10px 10px, 20px 20px;
+            animation: sandstorm 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 700px;
+            width: 100%;
+            min-height: calc(100vh - 40px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .language-selector {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .language-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:hover {
+            border-color: #667eea;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .swap-button {
+            padding: 10px 15px;
+            background-color: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+        }
+
+        .swap-button:hover {
+            background-color: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .text-group {
+            margin-bottom: 20px;
+        }
+
+        .text-group.input {
+            margin-bottom: 25px;
+        }
+
+        .text-group:not(.input) {
+            margin-top: 20px;
+        }
+
+        .text-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: #999;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #outputText {
+            background-color: #f9f9f9;
+            cursor: text;
+        }
+
+        #outputText:focus {
+            background-color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #translateBtn {
+            background-color: #667eea;
+            color: white;
+        }
+
+        #translateBtn:hover:not(:disabled) {
+            background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #translateBtn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #copyBtn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        #copyBtn:hover {
+            background-color: #e0e0e0;
+            border-color: #999;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+            display: block;
+        }
+
+        .message.success {
+            background-color: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+            display: block;
+        }
+
+        .message.info {
+            background-color: #eef;
+            color: #33c;
+            border: 1px solid #ccf;
+            display: block;
+        }
+
+        .copy-feedback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        .voice-button {
+            padding: 8px 12px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .voice-button:hover:not(:disabled) {
+            background-color: #e0e0e0;
+            border-color: #999;
+        }
+
+        .voice-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .voice-button.recording {
+            background-color: #ff4444;
+            color: white;
+            border-color: #ff4444;
+            animation: pulse 0.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+            }
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .unsupported-message {
+            background-color: #fef3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .character-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            min-height: 220px;
+            position: relative;
+        }
+
+        .character-box {
+            position: relative;
+            width: 220px;
+            max-width: 90vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .character-image {
+            width: 100%;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
+
+        .speech-bubble {
+            position: absolute;
+            top: -90px;
+            right: -10px;
+            background: white;
+            border: 2px solid #ff69b4;
+            border-radius: 18px;
+            padding: 14px 16px;
+            max-width: 240px;
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+            box-shadow: 0 8px 30px rgba(255, 20, 147, 0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1;
+        }
+
+        .character-box.showing-bubble .speech-bubble {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .language-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .swap-button {
+                transform: rotate(90deg);
+                width: 100%;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .text-header {
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: flex-start;
+            }
+
+            .input-actions,
+            .output-actions {
+                flex-direction: column;
+            }
+
+            .voice-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="haikei">
+    <div class="container">
+        <h1>🌐 ほんやく</h1>
+        <p class="subtitle">かんたんに翻訳できるよ！</p>
+
+        <div class="unsupported-message" id="unsupportedMessage">
+            ⚠️ お使いのブラウザは音声機能に対応していません。テキストでの翻訳をご利用ください。
+        </div>
+
+        <div class="character-container">
+            <div class="character-box" id="characterBox">
+                <img id="characterImage" class="character-image" src="リーボン１２.png" alt="くまキャラクター">
+                <div class="character-mouth-overlay" id="characterMouthOverlay"></div>
+                <div class="speech-bubble" id="speechBubble"></div>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="language-selector">
+            <div class="language-group">
+                <label for="fromLang">翻訳元言語</label>
+                <select id="fromLang">
+                    <option value="ja">日本語</option>
+                    <option value="en">英語</option>
+                    <option value="zh">中国語</option>
+                    <option value="ko">韓国語</option>
+                </select>
+            </div>
+            <button class="swap-button" id="swapBtn" title="言語を交換">⇄</button>
+            <div class="language-group">
+                <label for="toLang">翻訳先言語</label>
+                <select id="toLang">
+                    <option value="en">英語</option>
+                    <option value="ja">日本語</option>
+                    <option value="zh">中国語</option>
+                    <option value="ko">韓国語</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="text-group input">
+            <div class="text-header">
+                <label for="inputText">翻訳したいテキスト</label>
+                <span class="char-count"><span id="charCount">0</span>/1000文字</span>
+            </div>
+            <textarea id="inputText" placeholder="ここにテキストを入力してください..." maxlength="1000"></textarea>
+            <div class="input-actions">
+                <button id="voiceInputBtn" class="voice-button" title="マイクで入力">🎤 音声入力</button>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="translateBtn">翻訳する</button>
+            <button id="copyBtn">📋 結果をコピー</button>
+        </div>
+
+        <div class="text-group">
+            <label for="outputText">翻訳結果</label>
+            <textarea id="outputText" placeholder="翻訳結果がここに表示されます" readonly></textarea>
+            <div class="output-actions">
+                <button id="voiceOutputBtn" class="voice-button" title="音声で読み上げ">🔊 音声再生</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="copyFeedback">コピーしました！</div>
+
+    <script>
+        // 要素の取得
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const fromLang = document.getElementById('fromLang');
+        const toLang = document.getElementById('toLang');
+        const translateBtn = document.getElementById('translateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const messageDiv = document.getElementById('message');
+        const charCount = document.getElementById('charCount');
+        const copyFeedback = document.getElementById('copyFeedback');
+        // 文字数カウント
+        inputText.addEventListener('input', function() {
+            charCount.textContent = inputText.value.length;
+        });
+
+        const languageVoiceProfiles = {
+            ja: { rate: 0.85, pitch: 1.45, volume: 1.0 },
+            en: { rate: 0.85, pitch: 1.45, volume: 1.0 },
+            zh: { rate: 0.85, pitch: 1.45, volume: 1.0 },
+            ko: { rate: 0.85, pitch: 1.45, volume: 1.0 }
+        };
+
+        function getVoiceProfile(lang) {
+            return languageVoiceProfiles[lang] || languageVoiceProfiles.ja;
+        }
+
+        function isFemaleVoice(voice) {
+            const name = (voice.name || '').toLowerCase();
+            const uri = (voice.voiceURI || '').toLowerCase();
+            return name.includes('female') || name.includes('woman') || name.includes('girl') || name.includes('女性') || uri.includes('female') || uri.includes('woman') || uri.includes('girl') || uri.includes('女性');
+        }
+
+        function getVoiceForLanguage(lang) {
+            const normalized = lang.toLowerCase();
+            if (normalized === 'zh' || normalized === 'ko') {
+                return selectedSpeechVoice || speechVoices[0] || null;
+            }
+
+            const femaleMatch = speechVoices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith(normalized) && isFemaleVoice(voice));
+            if (femaleMatch) return femaleMatch;
+
+            const langMatch = speechVoices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith(normalized));
+            return langMatch || selectedSpeechVoice || speechVoices[0] || null;
+        }
+
+        // 言語交換ボタン
+        swapBtn.addEventListener('click', function() {
+            const temp = fromLang.value;
+            fromLang.value = toLang.value;
+            toLang.value = temp;
+        });
+
+ 
+        // 翻訳関数
+        async function translate() {
+            const text = inputText.value.trim();
+
+            if (!text) {
+                showMessage('📝 翻訳したいテキストを入力してください', 'error');
+                return;
+            }
+
+            if (fromLang.value === toLang.value) {
+                showMessage('⚠️ 翻訳元と翻訳先の言語が同じです', 'error');
+                return;
+            }
+
+            // UI状態の変更
+            translateBtn.disabled = true;
+            const originalText = translateBtn.textContent;
+            translateBtn.innerHTML = '<span class="loading"></span>';
+            messageDiv.className = 'message';
+            outputText.value = '';
+
+            try {
+                const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromLang.value}|${toLang.value}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.responseStatus === 200) {
+                    outputText.value = data.responseData.translatedText;
+                    showMessage('✅ 翻訳完了しました', 'success');
+                } else if (data.responseStatus === 429) {
+                    showMessage('⏱️ リクエストが多すぎます。少し待ってからもう一度試してください', 'error');
+                } else {
+                    showMessage('❌ 翻訳に失敗しました。もう一度試してください', 'error');
+                }
+            } catch (error) {
+                showMessage('❌ エラーが発生しました: ' + error.message, 'error');
+            } finally {
+                translateBtn.disabled = false;
+                translateBtn.textContent = originalText;
+            }
+        }
+
+        // 翻訳ボタンのクリックイベント
+        translateBtn.addEventListener('click', translate);
+
+        // Enterキーで翻訳
+        inputText.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                translate();
+            }
+        });
+
+        // コピーボタンの機能
+        copyBtn.addEventListener('click', function() {
+            if (!outputText.value) {
+                showMessage('📋 コピーする内容がありません', 'error');
+                return;
+            }
+
+            outputText.select();
+            document.execCommand('copy');
+
+            copyFeedback.classList.add('show');
+            setTimeout(() => {
+                copyFeedback.classList.remove('show');
+            }, 2000);
+        });
+
+        // 音声API チェック
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechSynthesis = window.speechSynthesis;
+        const voiceInputBtn = document.getElementById('voiceInputBtn');
+        const voiceOutputBtn = document.getElementById('voiceOutputBtn');
+        const unsupportedMessage = document.getElementById('unsupportedMessage');
+
+        let isRecording = false;
+        let speechVoices = [];
+        let selectedSpeechVoice = null;
+
+        function loadSpeechVoices() {
+            speechVoices = speechSynthesis.getVoices();
+            if (!selectedSpeechVoice) {
+                selectedSpeechVoice = selectPreferredFemaleVoice();
+            }
+        }
+
+        function selectPreferredFemaleVoice() {
+            const preferred = speechVoices.find(voice => {
+                const name = (voice.name || '').toLowerCase();
+                const uri = (voice.voiceURI || '').toLowerCase();
+                const female = name.includes('female') || name.includes('woman') || name.includes('girl') || name.includes('女性');
+                const adult = !name.includes('child') && !name.includes('kid') && !name.includes('baby') && !name.includes('young') && !name.includes('little') && !name.includes('junior');
+                return female && adult;
+            });
+            if (preferred) return preferred;
+            const anyFemale = speechVoices.find(voice => {
+                const name = (voice.name || '').toLowerCase();
+                return name.includes('female') || name.includes('woman') || name.includes('girl') || name.includes('女性');
+            });
+            return anyFemale || speechVoices[0] || null;
+        }
+
+        speechSynthesis.onvoiceschanged = loadSpeechVoices;
+        loadSpeechVoices();
+
+        // 音声機能のサポート確認
+        if (!SpeechRecognition || !SpeechSynthesis) {
+            voiceInputBtn.disabled = true;
+            voiceOutputBtn.disabled = true;
+            unsupportedMessage.style.display = 'block';
+        }
+
+        // 音声入力機能
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            
+            // 言語設定の対応
+            const langMap = {
+                'ja': 'ja-JP',
+                'en': 'en-US',
+                'zh': 'zh-CN',
+                'ko': 'ko-KR'
+            };
+
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            voiceInputBtn.addEventListener('click', function() {
+                if (isRecording) {
+                    recognition.stop();
+                    return;
+                }
+
+                isRecording = true;
+                recognition.lang = langMap[fromLang.value] || 'ja-JP';
+                voiceInputBtn.classList.add('recording');
+                voiceInputBtn.textContent = '🎤 聞取中...';
+                inputText.focus();
+                recognition.start();
+            });
+
+            recognition.onstart = function() {
+                isRecording = true;
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    inputText.value += finalTranscript;
+                    charCount.textContent = inputText.value.length;
+                } else if (interimTranscript) {
+                    voiceInputBtn.textContent = '🎤 ' + interimTranscript.substring(0, 10) + '...';
+                }
+            };
+
+            recognition.onerror = function(event) {
+                const errorMessages = {
+                    'no-speech': '音声が認識されませんでした。もう一度試してください。',
+                    'network': 'ネットワークエラーが発生しました。',
+                    'not-allowed': 'マイクへのアクセスが拒否されました。'
+                };
+                const message = errorMessages[event.error] || 'エラーが発生しました: ' + event.error;
+                showMessage('❌ ' + message, 'error');
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                voiceInputBtn.classList.remove('recording');
+                voiceInputBtn.textContent = '🎤 音声入力';
+            };
+        }
+
+        // 音声出力機能
+        if (SpeechSynthesis) {
+            voiceOutputBtn.addEventListener('click', function() {
+                const text = outputText.value.trim();
+
+                if (!text) {
+                    showMessage('🔊 再生する内容がありません', 'error');
+                    return;
+                }
+
+                // 再生中の場合は停止
+                if (SpeechSynthesis.speaking) {
+                    SpeechSynthesis.cancel();
+                    voiceOutputBtn.textContent = '🔊 音声再生';
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+
+                const langMap = {
+                    'ja': 'ja-JP',
+                    'en': 'en-US',
+                    'zh': 'zh-CN',
+                    'ko': 'ko-KR'
+                };
+
+                utterance.lang = langMap[toLang.value] || 'ja-JP';
+                utterance.voice = getVoiceForLanguage(toLang.value) || selectedSpeechVoice || speechVoices[0];
+
+                const profile = getVoiceProfile(toLang.value);
+                utterance.rate = profile.rate;
+                utterance.pitch = profile.pitch;
+                utterance.volume = profile.volume;
+
+                utterance.onstart = function() {
+                    voiceOutputBtn.textContent = '⏸️ 停止';
+                    voiceOutputBtn.style.backgroundColor = '#ff9800';
+                    voiceOutputBtn.style.borderColor = '#ff9800';
+                };
+
+                utterance.onend = function() {
+                    voiceOutputBtn.textContent = '🔊 音声再生';
+                    voiceOutputBtn.style.backgroundColor = '#f0f0f0';
+                    voiceOutputBtn.style.borderColor = '#e0e0e0';
+                    voiceOutputBtn.style.color = '#333';
+                };
+
+                utterance.onerror = function(event) {
+                    showMessage('❌ 音声再生エラー: ' + event.error, 'error');
+                    voiceOutputBtn.textContent = '🔊 音声再生';
+                    voiceOutputBtn.style.backgroundColor = '#f0f0f0';
+                    voiceOutputBtn.style.borderColor = '#e0e0e0';
+                    voiceOutputBtn.style.color = '#333';
+                };
+
+                SpeechSynthesis.speak(utterance);
+            });
+        }
+    </script>
+</body>
+</html>
