@@ -15,7 +15,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .haikei {
             position: relative;
             background: #0B254E;
@@ -410,25 +410,62 @@
         }
 
         @media (max-width: 600px) {
-            .container {
+            .haikei {
                 padding: 20px;
+            }
+
+            .container {
+                padding: 15px;
+                border-radius: 10px;
             }
 
             h1 {
                 font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+                margin-bottom: 15px;
+            }
+
+            .character-container {
+                min-height: 150px;
+                margin-bottom: 15px;
+            }
+
+            .character-box {
+                width: 150px;
+                max-width: 80vw;
+            }
+
+            .character-image {
+                border-radius: 18px;
+            }
+
+            .speech-bubble {
+                top: -70px;
+                right: -5px;
+                max-width: 180px;
+                font-size: 12px;
+                padding: 10px 12px;
             }
 
             .language-selector {
                 grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 15px;
             }
 
             .swap-button {
                 transform: rotate(90deg);
                 width: 100%;
+                height: 36px;
             }
 
             .button-group {
                 flex-direction: column;
+                gap: 8px;
             }
 
             .text-header {
@@ -437,14 +474,55 @@
                 align-items: flex-start;
             }
 
+            .char-count {
+                font-size: 11px;
+            }
+
+            textarea {
+                min-height: 100px;
+                font-size: 16px;
+                padding: 12px;
+            }
+
             .input-actions,
             .output-actions {
                 flex-direction: column;
+                gap: 8px;
+                margin-top: 8px;
             }
 
             .voice-button {
                 width: 100%;
                 justify-content: center;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .unsupported-message {
+                font-size: 12px;
+                padding: 8px 12px;
+                margin-bottom: 12px;
+            }
+
+            .copy-feedback {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+
+            label {
+                font-size: 13px;
+            }
+
+            select {
+                padding: 8px 12px;
+                font-size: 14px;
             }
         }
     </style>
